@@ -2,13 +2,14 @@ import { useState, useEffect } from 'react';
 
 const navLinks = [
   { label: 'Roadmap', href: '#roadmap' },
+  { label: 'Research', href: '#research', isResearch: true },
   { label: 'Leadership', href: '#leadership' },
   { label: 'Roles', href: '#roles' },
   { label: 'Partners', href: '#partners' },
   { label: 'Contact', href: '#contact' },
 ];
 
-export default function Navbar({ onApply }) {
+export default function Navbar({ onApply, currentRoute = '/', onNavigate }) {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -18,17 +19,61 @@ export default function Navbar({ onApply }) {
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
+  const handleLinkClick = (e, link) => {
+    if (link.isResearch) {
+      e.preventDefault();
+      setMenuOpen(false);
+      if (onNavigate) {
+        onNavigate('/research');
+      } else {
+        window.location.hash = '#research';
+      }
+      return;
+    }
+
+    // If we're on the dedicated /research page and clicking another section link
+    if (currentRoute === '/research') {
+      e.preventDefault();
+      setMenuOpen(false);
+      if (onNavigate) {
+        onNavigate('/', link.href);
+      } else {
+        window.location.href = `/${link.href}`;
+      }
+      return;
+    }
+
+    setMenuOpen(false);
+  };
+
+  const handleLogoClick = (e) => {
+    if (currentRoute === '/research') {
+      e.preventDefault();
+      if (onNavigate) {
+        onNavigate('/');
+      } else {
+        window.location.href = '/';
+      }
+    }
+  };
+
+  const isResearchActive = currentRoute === '/research';
+
   return (
     <nav
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        scrolled
+        scrolled || isResearchActive
           ? 'bg-[#0a0a0d]/90 backdrop-blur-xl border-b border-[#2b2b32]'
           : 'bg-transparent'
       }`}
     >
       <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
         {/* Logo */}
-        <a href="#hero" className="flex items-center gap-2 group">
+        <a
+          href="#hero"
+          onClick={handleLogoClick}
+          className="flex items-center gap-2 group cursor-pointer"
+        >
           <img
             src="/uris-logo.jpg"
             alt="MRU-URIS"
@@ -41,15 +86,26 @@ export default function Navbar({ onApply }) {
 
         {/* Desktop Nav */}
         <div className="hidden md:flex items-center gap-8">
-          {navLinks.map((link) => (
-            <a
-              key={link.href}
-              href={link.href}
-              className="text-[#a3a3ab] hover:text-white text-sm font-medium tracking-wide transition-colors duration-200"
-            >
-              {link.label}
-            </a>
-          ))}
+          {navLinks.map((link) => {
+            const isActive = link.isResearch && isResearchActive;
+            return (
+              <a
+                key={link.label}
+                href={link.href}
+                onClick={(e) => handleLinkClick(e, link)}
+                className={`text-sm font-medium tracking-wide transition-colors duration-200 cursor-pointer ${
+                  isActive
+                    ? 'text-[#2dd4bf] font-semibold'
+                    : 'text-[#a3a3ab] hover:text-white'
+                }`}
+              >
+                {link.label}
+                {isActive && (
+                  <span className="block h-0.5 bg-[#2dd4bf] rounded-full mt-0.5" />
+                )}
+              </a>
+            );
+          })}
         </div>
 
         {/* CTA */}
@@ -69,13 +125,19 @@ export default function Navbar({ onApply }) {
           aria-label="Toggle menu"
         >
           <span
-            className={`w-5 h-0.5 bg-white transition-all duration-200 ${menuOpen ? 'rotate-45 translate-y-2' : ''}`}
+            className={`w-5 h-0.5 bg-white transition-all duration-200 ${
+              menuOpen ? 'rotate-45 translate-y-2' : ''
+            }`}
           />
           <span
-            className={`w-5 h-0.5 bg-white transition-all duration-200 ${menuOpen ? 'opacity-0' : ''}`}
+            className={`w-5 h-0.5 bg-white transition-all duration-200 ${
+              menuOpen ? 'opacity-0' : ''
+            }`}
           />
           <span
-            className={`w-5 h-0.5 bg-white transition-all duration-200 ${menuOpen ? '-rotate-45 -translate-y-2' : ''}`}
+            className={`w-5 h-0.5 bg-white transition-all duration-200 ${
+              menuOpen ? '-rotate-45 -translate-y-2' : ''
+            }`}
           />
         </button>
       </div>
@@ -87,16 +149,23 @@ export default function Navbar({ onApply }) {
         } bg-[#0a0a0d]/95 backdrop-blur-xl border-b border-[#2b2b32]`}
       >
         <div className="px-6 py-4 flex flex-col gap-4">
-          {navLinks.map((link) => (
-            <a
-              key={link.href}
-              href={link.href}
-              onClick={() => setMenuOpen(false)}
-              className="text-[#a3a3ab] hover:text-white text-sm font-medium py-1 transition-colors"
-            >
-              {link.label}
-            </a>
-          ))}
+          {navLinks.map((link) => {
+            const isActive = link.isResearch && isResearchActive;
+            return (
+              <a
+                key={link.label}
+                href={link.href}
+                onClick={(e) => handleLinkClick(e, link)}
+                className={`text-sm font-medium py-1 transition-colors ${
+                  isActive
+                    ? 'text-[#2dd4bf] font-bold'
+                    : 'text-[#a3a3ab] hover:text-white'
+                }`}
+              >
+                {link.label}
+              </a>
+            );
+          })}
           <button
             onClick={() => {
               setMenuOpen(false);
